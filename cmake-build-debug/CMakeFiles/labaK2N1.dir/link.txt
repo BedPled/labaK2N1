@@ -1,0 +1,1 @@
+/usr/bin/c++.exe -g  -Wl,--enable-auto-import CMakeFiles/labaK2N1.dir/main.cpp.o  -o labaK2N1.exe -Wl,--out-implib,liblabaK2N1.dll.a -Wl,--major-image-version,0,--minor-image-version,0 

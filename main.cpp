@@ -28,13 +28,14 @@ const int num_R = 20; // кол-во полей в массиве, которы�
 const int length_buff = num_I + num_R + 3; // 3 тк '-' '.' '\0'
 
 struct TLong {
-    // + 1 тк первое поле хранит кол-во занятых ячеек
     char Integer[num_I][3]; // хранение целой части
     char Real[num_R][3]; // хранение дробной части
     int countReal = 0; // кол-во занятых ячеек дробной части
     int countInt = 0; // кол-во занятых ячеек целой части
     bool sign = true; // 1: +  |   0: -
 };
+
+bool LessTLong (TLong A, TLong B);
 
 int pos(char a){ // поиск цифры в массиве шестнадцетиричных цифр 0 - F (/0 == 0)
     int i = 0;
@@ -242,9 +243,97 @@ TLong sumTLong (TLong A, TLong B){ // A + B
 TLong subTLong (TLong A, TLong B){ // A - B
     TLong C;
     int help = 0;
+    int remainder = 0;
+///////////////////////////////////////////////
+
+//    if (A.countReal >= B.countReal) {C.countReal = A.countReal;}
+//    else {C.countReal = B.countReal;}
+//
+//    if (A.countInt >= B.countInt) C.countInt = A.countInt;
+//    else C.countInt = B.countInt;
+
+if (LessTLong(A, B)){
+    C.countInt = B.countInt;
+    if (A.countReal >= B.countReal) {
+        C.countReal = A.countReal;
+    } else {
+        C.countReal = B.countReal;
+    }
+
+    for (int i = C.countReal - 1; i >= 0; i--){ // складываем Real    A < B => B - A
+        for(int j = 2; j >= 0 ; j--){
+            if (i + 1 > A.countReal || A.Real[i][j] == '\0'){
+                C.Real[i][j] = B.Real[i][j];
+            } else if (i + 1 > B.countReal || B.Real[i][j] == '\0') {
+                if (pos(A.Real[i][j]) != 0) {
+                    C.Real[i][j] = num_hex[16 - pos(A.Real[i][j]) - remainder];
+                    remainder = 1;
+                } else {
+                    C.Real[i][j] = num_hex[0];
+                }
+            } else {
+                help = pos(B.Real[i][j]) - pos(A.Real[i][j]) - remainder;
+                if (help < 0) {
+                    C.Real[i][j] = num_hex[16 + help];
+                    remainder = 1;
+                } else {
+                    C.Real[i][j] = num_hex[help];
+                    remainder = 0;
+                }
+            }
+
+        }
+    }
+
+} else {
 
 
 
+}
+
+//    for (int i = C.countReal - 1; i >= 0; i--){ // складываем Real
+//        for(int j = 2; j >= 0 ; j--){
+//            // складываем real A + B
+//            if (i + 1 > A.countReal || A.Real[i][j] == '\0'){
+//                help = pos(B.Real[i][j]) + (help / 16);
+//                C.Real[i][j] = num_hex[help % 16];
+//            } else if (i + 1 > B.countReal || B.Real[i][j] == '\0') {
+//                help = pos(A.Real[i][j]) + (help / 16);
+//                C.Real[i][j] = num_hex[help % 16];
+//            } else {
+//                help = pos(A.Real[i][j]) + pos(B.Real[i][j]) + (help / 16);
+//                C.Real[i][j] = num_hex[help % 16];
+//            }
+//        }
+//    }
+//
+//    for (int i = 0; i < C.countInt; i++){ // складываем Int
+//        for (int j = 0; j <= 2; j++){
+//            if (A.Integer[i][j] == '\0' && B.Integer[i][j] == '\0'){
+//                help = (help / 16);
+//                if (help != 0) C.Integer[i][j] = num_hex[1];
+//                else C.Integer[i][j] = 0;
+//            } else if (i + 1 > A.countInt || A.Integer[i][j] == '\0'){
+//                help = pos(B.Integer[i][j]) + (help / 16);
+//                C.Integer[i][j] = num_hex[help % 16];
+//            } else if (i + 1 > B.countInt || B.Integer[i][j] == '\0') {
+//                help = pos(A.Integer[i][j]) + (help / 16);
+//                C.Integer[i][j] = num_hex[help % 16];
+//            } else {
+//                help = pos(A.Integer[i][j]) + pos(B.Integer[i][j]) + (help / 16);
+//                C.Integer[i][j] = num_hex[help % 16];
+//            }
+//        }
+//    }
+//    // прописать для случая когда + 1 countInt
+//    if (help / 16 == 1){
+//        C.countInt++;
+//        C.Integer[C.countInt - 1][0] = '1';
+//        C.Integer[C.countInt - 1][1] = 0;
+//        C.Integer[C.countInt - 1][2] = 0;
+//    }
+
+///////////////////////////////////
     return C;
 }
 
@@ -304,31 +393,17 @@ int main() {
 
     num = readTLong(inFile);
     num2 = readTLong(inFile);
-    writeTlong(num);
-    cout << " < ";
-    writeTlong(num2);
-    cout << " ?" << endl;
-//
-//    for(int i =  num.countInt - 1; i >= 0; i--){
-//        for(int j = 2; j >= 0 ; j--){
-//            cout << pos(num.Integer[i][j]);
-//            cout << " ";
-//        }
-//    }
-//
-//    cout << ".";
-//    for(int i = 0; i < num.countReal; i++){
-//        for(int j = 0; j < 3 ; j++){
-//            cout << pos(num.Real[i][j]);
-//            cout << " ";
-//        }
-//    }
+    //writeTlong(num);
+    //cout << " < ";
+    //writeTlong(num2);
+    writeTlong(subTLong(num, num2));
+
 
    // cout << EQTLong(num,num2);
     cout << endl;
     //writeTlong(sumTLong(num,num2));
     //cout << LessTLong(num,num2); // num < num2
-    cout << (LessTLong(num,num2) ? "Да" : "Нет"); // num < num2
+    //cout << (LessTLong(num,num2) ? "Да" : "Нет"); // num < num2
     cout << endl;
     inFile.close();
 }

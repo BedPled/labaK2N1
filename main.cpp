@@ -35,9 +35,62 @@ struct TLong {
     bool sign = true; // 1: +  |   0: -
 };
 
-bool LessTLong (TLong A, TLong B);
+int pos(char a); // поиск цифры в массиве шестнадцетиричных цифр 0 - F (/0 == 0)
+TLong additionTLong (TLong A, TLong B); // |A| + |B|
+TLong subtractionTLong (TLong A, TLong B); // |A| + |B| (A > B)
+void makeItNormal (TLong& A); // убирает лишние нули и пустые
 
-int pos(char a){ // поиск цифры в массиве шестнадцетиричных цифр 0 - F (/0 == 0)
+TLong readTLong(ifstream &inFile); // считывание числа типа TLong из файла
+void writeTlong(TLong num); // вывод числа типа TLong
+TLong sumTLong (TLong A, TLong B); // A + B
+TLong subTLong (TLong A, TLong B); // A - B
+bool isLessTLong (TLong A, TLong B); // |A| < |B|
+bool isEQTLong (TLong A, TLong B); // A == B
+
+
+void makeItNormal (TLong &A){
+bool flag = false;
+int countInt = A.countInt;
+int countReal = A.countReal;
+
+    for (int i = A.countInt - 1; i >= 0; i--) { // складываем Int
+        for (int j = 2; j >= 0; j--) {
+            if (A.Integer[i][j] != '0' && A.Integer[i][j] != '\0' || i == 0 && j == 0){
+                flag = true;
+                break;
+            } else {
+                if (A.Integer[i][j] == '0') {
+                    A.Integer[i][j] = '\0';
+                }
+            }
+        }
+        if (flag) {
+            break;
+        } else countInt--;
+    }
+
+    A.countInt = countInt;
+    flag = false;
+
+    for (int i =  A.countReal - 1; i >= 0; i--) { // складываем Real    A >= B -> A - B
+        for (int j = 2; j >= 0; j--) {
+            if (A.Real[i][j] != '0' && A.Real[i][j] != '\0' || i == 0 && j == 0){
+                flag = true;
+                break;
+            } else {
+                if (A.Real[i][j] == '0') {
+                    A.Real[i][j] = '\0';
+                }
+            }
+        }
+        if (flag) {
+            break;
+        } else countReal--;
+    }
+    A.countReal = countReal;
+}
+
+int pos(char a){
     int i = 0;
     while (num_hex[i] != a && i < 16 && (int)a != 0){
         i++;
@@ -46,21 +99,17 @@ int pos(char a){ // поиск цифры в массиве шестнадцет
     else return -1;
 }
 
-TLong readTLong(ifstream& inFile){
+TLong readTLong(ifstream &inFile){
     TLong num;
     int dot_num = 0;
     int dot_count = 0;
-    //bool checkdot = false;
     bool correct = true;
     int null_num = 0; // номер '/0' в буфере
 
     if (inFile.is_open()) {
         // буфер промежуточного хранения ['-'] + int + '.' + real + ' '
-
         char buff[length_buff];
-        //for (int i = 0; i < length_buff; i++) buff[i] = '\0'; //!!!!! заполение буфера (убрать и искать \0)!!!!!!
         inFile >> buff;
-
 
         // проверки кореектности
         if (buff[0] == '-') { // проверки кореектности для отрицательного
@@ -171,7 +220,7 @@ TLong readTLong(ifstream& inFile){
     return num;
 }
 
-void writeTlong(TLong num){ // вывод числа типа TLong
+void writeTlong(TLong num){
     if (!num.sign){
         cout << '-';
     }
@@ -234,13 +283,14 @@ TLong additionTLong (TLong A, TLong B){ // A + B
             }
         }
     }
-    // прописать для случая когда + 1 countInt
+    // случая когда + 1 countInt
     if (help / 16 == 1){
         C.countInt++;
         C.Integer[C.countInt - 1][0] = '1';
         C.Integer[C.countInt - 1][1] = 0;
         C.Integer[C.countInt - 1][2] = 0;
     }
+    makeItNormal(C);
     return C;
 }
 
@@ -248,67 +298,6 @@ TLong subtractionTLong (TLong A, TLong B){ // A - B
     TLong C;
     int help = 0;
     int remainder = 0;
-
-
-    //if (LessTLong(A, B)){ //  B - A
-        /*
-        C.countInt = B.countInt;
-        if (A.countReal >= B.countReal) {
-            C.countReal = A.countReal;
-        } else {
-            C.countReal = B.countReal;
-        }
-
-        for (int i = C.countReal - 1; i >= 0; i--){ // складываем Real    A < B -> B - A
-            for(int j = 2; j >= 0 ; j--){
-                if (i + 1 > A.countReal || A.Real[i][j] == '\0'){
-                    C.Real[i][j] = B.Real[i][j];
-                } else if (i + 1 > B.countReal || B.Real[i][j] == '\0') {
-                    if (pos(A.Real[i][j]) != 0) {
-                        C.Real[i][j] = num_hex[16 - pos(A.Real[i][j]) - remainder];
-                        remainder = 1;
-                    } else {
-                        C.Real[i][j] = num_hex[0];
-                    }
-                } else {
-                    help = pos(B.Real[i][j]) - pos(A.Real[i][j]) - remainder;
-                    if (help < 0) {
-                        C.Real[i][j] = num_hex[16 + help];
-                        remainder = 1;
-                    } else {
-                        C.Real[i][j] = num_hex[help];
-                        remainder = 0;
-                    }
-                }
-
-            }
-        }
-
-        for (int i = 0; i < C.countInt; i++){ // складываем Int
-            for (int j = 0; j <= 2; j++){
-                if (i + 1 > A.countInt || A.Integer[i][j] == '\0'){
-                    C.Integer[i][j] = num_hex[pos(B.Integer[i][j]) - remainder];
-                } else if (i + 1 > B.countInt || B.Integer[i][j] == '\0') {
-                    if (pos(A.Integer[i][j]) != 0) {
-                        C.Integer[i][j] = num_hex[16 - pos(A.Integer[i][j]) - remainder];
-                        remainder = 1;
-                    } else {
-                        C.Integer[i][j] = num_hex[0];
-                    }
-                } else {
-                    help = pos(B.Integer[i][j]) - pos(A.Integer[i][j]) - remainder;
-                    if (help < 0) {
-                        C.Integer[i][j] = num_hex[16 + help];
-                        remainder = 1;
-                    } else {
-                        C.Integer[i][j] = num_hex[help];
-                        remainder = 0;
-                    }
-                }
-            }
-        }
-    */
-   // } else { // A - B
 
         C.countInt = A.countInt;
         if (A.countReal >= B.countReal) {
@@ -365,8 +354,7 @@ TLong subtractionTLong (TLong A, TLong B){ // A - B
                 }
             }
         }
-   // }
-
+    makeItNormal(C);
     return C;
 }
 
@@ -377,7 +365,7 @@ TLong sumTLong (TLong A, TLong B){
         C.sign = 1;
         // убрать лишнее если нужно
     } else if (A.sign && !B.sign) {          // A - B
-        if (LessTLong(B, A)){// |B| < |A| ?
+        if (isLessTLong(B, A)){// |B| < |A| ?
             C = subtractionTLong(A, B);
             C.sign = 1;
         } else {
@@ -386,7 +374,7 @@ TLong sumTLong (TLong A, TLong B){
         }
         // убрать лишнее если нужно
     } else if (!A.sign && B.sign) {         // - A + B
-        if (LessTLong(B, A)){// |B| < |A| ?
+        if (isLessTLong(B, A)){// |B| < |A| ?
             C = subtractionTLong(A, B);
             C.sign = 0;
         } else {
@@ -405,7 +393,7 @@ TLong sumTLong (TLong A, TLong B){
 TLong subTLong (TLong A, TLong B){
     TLong C;
     if (A.sign && B.sign) {             // A - B
-        if (LessTLong(B, A)){// |B| < |A| ?
+        if (isLessTLong(B, A)){// |B| < |A| ?
             C = subtractionTLong(A, B);
             C.sign = 1;
         } else {
@@ -422,7 +410,7 @@ TLong subTLong (TLong A, TLong B){
         C.sign = 0;
         // убрать лишнее если нужно
     } else {                            // - A + B
-        if (LessTLong(B, A)){// |B| < |A| ?
+        if (isLessTLong(B, A)){// |B| < |A| ?
             C = subtractionTLong(A, B);
             C.sign = 0;
         } else {
@@ -434,7 +422,7 @@ TLong subTLong (TLong A, TLong B){
     return C;
 }
 
-bool LessTLong (TLong A, TLong B){ // |A| < |B| ?
+bool isLessTLong (TLong A, TLong B){
     if (A.countInt < B.countInt){
         return true;
     } else if (B.countInt < A.countInt) {
@@ -467,7 +455,7 @@ bool LessTLong (TLong A, TLong B){ // |A| < |B| ?
     }
 }
 
-bool EQTLong (TLong A, TLong B){ // A == B
+bool isEQTLong (TLong A, TLong B){
     if (A.countReal == B.countReal && A.countInt == B.countInt){
         for (int i =  A.countInt - 1; i >= 0; i--){
             for(int j = 2; j >= 0 ; j--){
@@ -490,20 +478,16 @@ int main() {
 
     num = readTLong(inFile);
     num2 = readTLong(inFile);
-    //writeTlong(num);
-    //cout << " < ";
-    //writeTlong(num2);
+
+
     writeTlong(subTLong(num, num2));
     cout << endl;
+
     writeTlong(sumTLong(num, num2));
+    cout << endl;
 
 
-   // cout << EQTLong(num,num2);
-    cout << endl;
-    //writeTlong(sumTLong(num,num2));
-    //cout << LessTLong(num,num2); // num < num2
-    //cout << (LessTLong(num,num2) ? "Да" : "Нет"); // num < num2
-    cout << endl;
+
     inFile.close();
 }
 

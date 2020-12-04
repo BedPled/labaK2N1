@@ -1,5 +1,3 @@
-
-
 /*
 Задача:
 1. тип числа - вещественное 16 разрядное число
@@ -14,9 +12,7 @@
 6)EQ (A: TLong, B: TLong) boolean
 */
 
-/*    что делать
 
-*/
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -40,13 +36,34 @@ TLong additionTLong (TLong A, TLong B); // |A| + |B|
 TLong subtractionTLong (TLong A, TLong B); // |A| + |B| (A > B)
 void makeItNormal (TLong& A); // убирает лишние нули и пустые
 
-TLong readTLong(ifstream &inFile); // считывание числа типа TLong из файла
-void writeTlong(TLong num); // вывод числа типа TLong
+void readTLong(ifstream &inFile, TLong &A, bool &correct); // считывание числа типа TLong из файла. correct - true число корректно, False - некорректно
+void writeTlong(ofstream &outFile, TLong num); // вывод числа типа TLong
 TLong sumTLong (TLong A, TLong B); // A + B
 TLong subTLong (TLong A, TLong B); // A - B
 bool isLessTLong (TLong A, TLong B); // |A| < |B|
 bool isEQTLong (TLong A, TLong B); // A == B
 
+int main() {
+    char buff[5];
+    TLong num1, num2;
+    ofstream outFile("C:/Users/BedTed/CLionProjects/labaK2N1/cmake-build-debug/outFile.txt");
+    ifstream inFile("C:/Users/BedTed/CLionProjects/labaK2N1/cmake-build-debug/inFile.txt");
+
+    outFile << "123" << endl;
+
+/*    while (!inFile.eof()){
+        //num1 = readTLong(inFile);
+        inFile >> buff;
+
+        if (buff[0] == '-') subTLong(num1, num2);
+        else if (buff[0] == '+') sumTLong(num1, num2);
+
+        // num2 = readTLong(inFile);
+    }*/
+
+    outFile.close();
+    inFile.close();
+}
 
 void makeItNormal (TLong &A){
 bool flag = false;
@@ -99,11 +116,11 @@ int pos(char a){
     else return -1;
 }
 
-TLong readTLong(ifstream &inFile){
+void readTLong(ifstream &inFile, TLong A, bool correct){
     TLong num;
     int dot_num = 0;
     int dot_count = 0;
-    bool correct = true;
+    correct = true;
     int null_num = 0; // номер '/0' в буфере
 
     if (inFile.is_open()) {
@@ -217,24 +234,24 @@ TLong readTLong(ifstream &inFile){
             }
         } else cout << "более одной точки в числе или неверный символ" << endl;
     }
-    return num;
+    A = num;
 }
 
-void writeTlong(TLong num){
+void writeTlong(ofstream &outFile, TLong num){
     if (!num.sign){
-        cout << '-';
+        outFile << '-';
     }
 
     for(int i =  num.countInt - 1; i >= 0; i--){
         for(int j = 2; j >= 0 ; j--){
-            cout << num.Integer[i][j];
+            outFile << num.Integer[i][j];
         }
     }
 
-    cout << ".";
+    outFile << ".";
     for(int i = 0; i < num.countReal; i++){
         for(int j = 0; j < 3 ; j++){
-            cout << num.Real[i][j];
+            outFile << num.Real[i][j];
         }
     }
 }
@@ -362,29 +379,29 @@ TLong sumTLong (TLong A, TLong B){
     TLong C;
     if (A.sign && B.sign) {                  // A + B
         C = additionTLong (A, B);
-        C.sign = 1;
+        C.sign = true;
         // убрать лишнее если нужно
     } else if (A.sign && !B.sign) {          // A - B
         if (isLessTLong(B, A)){// |B| < |A| ?
             C = subtractionTLong(A, B);
-            C.sign = 1;
+            C.sign = true;
         } else {
             C = subtractionTLong(B, A);
-            C.sign = 0;
+            C.sign = false;
         }
         // убрать лишнее если нужно
     } else if (!A.sign && B.sign) {         // - A + B
         if (isLessTLong(B, A)){// |B| < |A| ?
             C = subtractionTLong(A, B);
-            C.sign = 0;
+            C.sign = false;
         } else {
             C = subtractionTLong(B, A);
-            C.sign = 1;
+            C.sign = true;
         }
         // убрать лишнее если нужно
     } else {                                // - A - B
         C = additionTLong (A, B);
-        C.sign = 0;
+        C.sign = false;
         // убрать лишнее если нужно
     }
     return C;
@@ -395,27 +412,27 @@ TLong subTLong (TLong A, TLong B){
     if (A.sign && B.sign) {             // A - B
         if (isLessTLong(B, A)){// |B| < |A| ?
             C = subtractionTLong(A, B);
-            C.sign = 1;
+            C.sign = true;
         } else {
             C = subtractionTLong(B, A);
-            C.sign = 0;
+            C.sign = false;
         }
         // убрать лишнее если нужно
     } else if (A.sign && !B.sign) {     // A + B
         C = additionTLong (A, B);
-        C.sign = 1;
+        C.sign = true;
         // убрать лишнее если нужно
     } else if (!A.sign && B.sign) {     // - A - B
         C = additionTLong (A, B);
-        C.sign = 0;
+        C.sign = false;
         // убрать лишнее если нужно
     } else {                            // - A + B
         if (isLessTLong(B, A)){// |B| < |A| ?
             C = subtractionTLong(A, B);
-            C.sign = 0;
+            C.sign = false;
         } else {
             C = subtractionTLong(B, A);
-            C.sign = 1;
+            C.sign = true;
         }
         // убрать лишнее если нужно
     }
@@ -456,7 +473,7 @@ bool isLessTLong (TLong A, TLong B){
 }
 
 bool isEQTLong (TLong A, TLong B){
-    if (A.countReal == B.countReal && A.countInt == B.countInt){
+    if (A.countReal == B.countReal && A.countInt == B.countInt && A.sign == B.sign){
         for (int i =  A.countInt - 1; i >= 0; i--){
             for(int j = 2; j >= 0 ; j--){
                 if (A.Integer[i][j] != B.Integer[i][j]) return false;
@@ -472,22 +489,4 @@ bool isEQTLong (TLong A, TLong B){
     return true;
 }
 
-int main() {
-    TLong num, num2;
-    ifstream inFile("C:/Users/BedTed/CLionProjects/labaK2N1/cmake-build-debug/inFile.txt");
-
-    num = readTLong(inFile);
-    num2 = readTLong(inFile);
-
-
-    writeTlong(subTLong(num, num2));
-    cout << endl;
-
-    writeTlong(sumTLong(num, num2));
-    cout << endl;
-
-
-
-    inFile.close();
-}
 

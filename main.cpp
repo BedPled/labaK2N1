@@ -44,26 +44,56 @@ bool isLessTLong (TLong A, TLong B); // |A| < |B|
 bool isEQTLong (TLong A, TLong B); // A == B
 
 int main() {
+    int i = 1;
     char buff[5];
-    TLong num1, num2;
+    bool correct = true;
+    TLong num1, num2, result;
+
     ofstream outFile("C:/Users/BedTed/CLionProjects/labaK2N1/cmake-build-debug/outFile.txt");
     ifstream inFile("C:/Users/BedTed/CLionProjects/labaK2N1/cmake-build-debug/inFile.txt");
 
-    outFile << "123" << endl;
 
-/*    while (!inFile.eof()){
-        //num1 = readTLong(inFile);
-        inFile >> buff;
+    readTLong(inFile, num1, correct); // ввод первого числа
+    if (correct && !inFile.eof()){
+        while (!inFile.eof()) {
+            i++;
+            inFile >> buff;
+            if (!inFile.eof()){
+                readTLong(inFile, num2, correct);
 
-        if (buff[0] == '-') subTLong(num1, num2);
-        else if (buff[0] == '+') sumTLong(num1, num2);
+                if (correct && buff[1] == '\0') {
+                    if (buff[0] == '-') {
+                        result = subTLong(num1, num2);
+                    } else if (buff[0] == '+') {
+                        result = sumTLong(num1, num2);
+                    } else {
+                        outFile << "Ошибка ввода знака операции " << i - 1 << endl;
+                        return -1;
+                        //break;
+                    }
+                } else {
+                    if (!correct) outFile << "Ошибка ввода числа " << i << endl;
+                    if (buff[1] != '\0') outFile << "Ошибка ввода знака " << i - 1 << endl;
+                    return -1;
+                    //break;
+                }
+            } else {
+                outFile << "Нет числа после знака " << i << endl;
+                return -1;
+            }
 
-        // num2 = readTLong(inFile);
-    }*/
+            num1 = result;
+        }
+    } else {
+        outFile << "Ошибка ввода числа 1 " << endl;
+        return -1;
+    }
+
+    writeTlong(outFile, result);
 
     outFile.close();
     inFile.close();
-}
+    }
 
 void makeItNormal (TLong &A){
 bool flag = false;
@@ -116,7 +146,7 @@ int pos(char a){
     else return -1;
 }
 
-void readTLong(ifstream &inFile, TLong A, bool correct){
+void readTLong(ifstream &inFile, TLong &A, bool &correct){
     TLong num;
     int dot_num = 0;
     int dot_count = 0;
@@ -232,7 +262,10 @@ void readTLong(ifstream &inFile, TLong A, bool correct){
                 k++;
                 b++;
             }
-        } else cout << "более одной точки в числе или неверный символ" << endl;
+        } else {
+            correct = false;
+            cout << "более одной точки в числе или неверный символ" << endl;
+        }
     }
     A = num;
 }
@@ -244,14 +277,14 @@ void writeTlong(ofstream &outFile, TLong num){
 
     for(int i =  num.countInt - 1; i >= 0; i--){
         for(int j = 2; j >= 0 ; j--){
-            outFile << num.Integer[i][j];
+            if (num.Integer[i][j] != '\0') outFile << num.Integer[i][j];
         }
     }
 
     outFile << ".";
     for(int i = 0; i < num.countReal; i++){
         for(int j = 0; j < 3 ; j++){
-            outFile << num.Real[i][j];
+            if (num.Real[i][j] != '\0') outFile << num.Real[i][j];
         }
     }
 }
@@ -382,7 +415,7 @@ TLong sumTLong (TLong A, TLong B){
         C.sign = true;
         // убрать лишнее если нужно
     } else if (A.sign && !B.sign) {          // A - B
-        if (isLessTLong(B, A)){// |B| < |A| ?
+        if (isLessTLong(B, A)){         // |B| < |A| ?
             C = subtractionTLong(A, B);
             C.sign = true;
         } else {

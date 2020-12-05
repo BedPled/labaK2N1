@@ -12,16 +12,15 @@
 6)EQ (A: TLong, B: TLong) boolean
 */
 
-
 #include <string>
 #include <iostream>
 #include <fstream>
 
 using namespace std;
 const char num_hex[] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
-const int num_I = 20; // кол-во полей в массиве, который хранит целую часть
-const int num_R = 20; // кол-во полей в массиве, который хранит вещественную часть
-const int length_buff = num_I + num_R + 3; // 3 тк '-' '.' '\0'
+const int num_I = 5; // кол-во полей в массиве, который хранит целую часть
+const int num_R = 5; // кол-во полей в массиве, который хранит вещественную часть
+const int length_buff = num_I * 3 + num_R * 3 + 3; // 3 тк '-' '.' '\0'
 
 struct TLong {
     char Integer[num_I][3]; // хранение целой части
@@ -135,6 +134,12 @@ int countReal = A.countReal;
         } else countReal--;
     }
     A.countReal = countReal;
+
+//    if (A.countReal == 1 && A.countInt == 1){
+//        if (A.Real[0][0] == '0' && A.Integer[0][0] == '0' && A.Real[0][1] == '\0' && A.Integer[0][1] == '\0') {
+//            A.sign = true;
+//        }
+//    }
 }
 
 int pos(char a){
@@ -148,6 +153,8 @@ int pos(char a){
 
 void readTLong(ifstream &inFile, TLong &A, bool &correct){
     TLong num;
+    int Inum = 0;
+    int Rnum = 0;
     int dot_num = 0;
     int dot_count = 0;
     correct = true;
@@ -176,9 +183,13 @@ void readTLong(ifstream &inFile, TLong &A, bool &correct){
 
             if (correct) {  // проверка символов и поиск точки для отрицательного
                 for (int i = 1; i < null_num; i++){                                             // i = 1 тк buff[0] == '-'
+
                     if (buff[i] == '.') {
                         dot_count++;
                         dot_num = i;
+                    } else {
+                        if (dot_count == 0) Inum++;
+                        if (dot_count == 1) Rnum++;
                     }
                     if ((buff[i] < '0' || buff[i] > '9') &&
                         (buff[i] < 'A' || buff[i] > 'F') && (buff[i] != '.') && ((int)buff[i] != 0)){
@@ -204,13 +215,18 @@ void readTLong(ifstream &inFile, TLong &A, bool &correct){
             // !!! проверка длины int и real !!!
 
 
+
             if (correct) { // 1.3) проверка символов и поиск точки для положительного
                 for (int i = 0; i < null_num; i++){
 
                     if (buff[i] == '.') {
                         dot_count++;
                         dot_num = i;
+                    } else {
+                        if (dot_count == 0) Inum++;
+                        if (dot_count == 1) Rnum++;
                     }
+
                     if ((buff[i] < '0' || buff[i] > '9') &&
                         (buff[i] < 'A' || buff[i] > 'F') && (buff[i] != '.') && ((int)buff[i] != 0)){
                         cout << "Некорректный символ: " << buff[i] << endl;
@@ -222,7 +238,7 @@ void readTLong(ifstream &inFile, TLong &A, bool &correct){
 
 
         // обработка числа
-        if (dot_count == 1 && correct){
+        if (dot_count == 1 && correct && Inum > 0 && Rnum > 0){
             int a = 0;
 
             for (int i = dot_num - 1; i > 0; i--){  //Integer
@@ -264,9 +280,9 @@ void readTLong(ifstream &inFile, TLong &A, bool &correct){
             }
         } else {
             correct = false;
-            cout << "более одной точки в числе или неверный символ" << endl;
+            cout << "некорректное число" << endl;
         }
-    }
+    } else cout << "файл закрыт" << endl;
     A = num;
 }
 
@@ -335,7 +351,8 @@ TLong additionTLong (TLong A, TLong B){ // A + B
     }
     // случая когда + 1 countInt
     if (help / 16 == 1){
-        C.countInt++;
+        if (C.countInt < num_I) C.countInt++;
+        else if (C.countInt == num_I) cout << "ПЕРЕПОЛНЕНИЕ ЧИСЛА" << endl;
         C.Integer[C.countInt - 1][0] = '1';
         C.Integer[C.countInt - 1][1] = 0;
         C.Integer[C.countInt - 1][2] = 0;
@@ -437,6 +454,13 @@ TLong sumTLong (TLong A, TLong B){
         C.sign = false;
         // убрать лишнее если нужно
     }
+
+    if (C.countReal == 1 && C.countInt == 1){
+        if (C.Real[0][0] == '0' && C.Integer[0][0] == '0' && C.Real[0][1] == '\0' && C.Integer[0][1] == '\0') {
+            C.sign = true;
+        }
+    }
+
     return C;
 }
 
@@ -468,6 +492,11 @@ TLong subTLong (TLong A, TLong B){
             C.sign = true;
         }
         // убрать лишнее если нужно
+    }
+    if (C.countReal == 1 && C.countInt == 1){
+        if (C.Real[0][0] == '0' && C.Integer[0][0] == '0' && C.Real[0][1] == '\0' && C.Integer[0][1] == '\0') {
+            C.sign = true;
+        }
     }
     return C;
 }

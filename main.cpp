@@ -18,8 +18,8 @@
 
 using namespace std;
 const char num_hex[] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
-const int num_I = 5; // кол-во полей в массиве, который хранит целую часть
-const int num_R = 5; // кол-во полей в массиве, который хранит вещественную часть
+const int num_I = 1; // кол-во полей в массиве, который хранит целую часть
+const int num_R = 1; // кол-во полей в массиве, который хранит вещественную часть
 const int length_buff = num_I * 3 + num_R * 3 + 3; // 3 тк '-' '.' '\0'
 
 struct TLong {
@@ -72,7 +72,7 @@ int main() {
                     }
                 } else {
                     if (!correct) outFile << "Ошибка ввода числа " << i << endl;
-                    if (buff[1] != '\0') outFile << "Ошибка ввода знака " << i - 1 << endl;
+                    if (buff[1] != '\0') outFile << "Ошибка ввода знака операции " << i - 1 << endl;
                     return -1;
                     //break;
                 }
@@ -190,6 +190,11 @@ void readTLong(ifstream &inFile, TLong &A, bool &correct){
                     } else {
                         if (dot_count == 0) Inum++;
                         if (dot_count == 1) Rnum++;
+                        if (Inum > num_I * 3 || Rnum > num_R * 3) {
+                            correct = false;
+                            cout << "переполнение целой или вещественной части числа" << endl;
+                            break;
+                        }
                     }
                     if ((buff[i] < '0' || buff[i] > '9') &&
                         (buff[i] < 'A' || buff[i] > 'F') && (buff[i] != '.') && ((int)buff[i] != 0)){
@@ -214,17 +219,19 @@ void readTLong(ifstream &inFile, TLong &A, bool &correct){
 
             // !!! проверка длины int и real !!!
 
-
-
             if (correct) { // 1.3) проверка символов и поиск точки для положительного
                 for (int i = 0; i < null_num; i++){
-
                     if (buff[i] == '.') {
                         dot_count++;
                         dot_num = i;
                     } else {
                         if (dot_count == 0) Inum++;
                         if (dot_count == 1) Rnum++;
+                        if (Inum > num_I * 3 || Rnum > num_R * 3) {
+                            correct = false;
+                            cout << "переполнение целой или вещественной части числа" << endl;
+                            break;
+                        }
                     }
 
                     if ((buff[i] < '0' || buff[i] > '9') &&

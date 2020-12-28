@@ -2,14 +2,6 @@
 Задача:
 1. тип числа - вещественное 16 разрядное число
 2. число делится по 3 цифры
-
-функции, которые необходимо разработать:
-1)readTLong (f: text; *A: TLong): boolean - считываем ровнор одно число
-2)writeTlong (f: text; A: Tlong )
-3)sum (A: TLong, B: TLong):TLong
-4)sub (A: TLong, B: TLong):TLong
-5)Less (A: TLong, B: TLong) boolean
-6)EQ (A: TLong, B: TLong) boolean
 */
 
 #include <string>
@@ -18,8 +10,8 @@
 
 using namespace std;
 const char num_hex[] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
-const int num_I = 1; // кол-во полей в массиве, который хранит целую часть
-const int num_R = 1; // кол-во полей в массиве, который хранит вещественную часть
+const int num_I = 3; // кол-во полей в массиве, который хранит целую часть
+const int num_R = 3; // кол-во полей в массиве, который хранит вещественную часть
 const int length_buff = num_I * 3 + num_R * 3 + 3; // 3 тк '-' '.' '\0'
 
 struct TLong {
@@ -41,6 +33,7 @@ TLong sumTLong (TLong A, TLong B); // A + B
 TLong subTLong (TLong A, TLong B); // A - B
 bool isLessTLong (TLong A, TLong B); // |A| < |B|
 bool isEQTLong (TLong A, TLong B); // A == B
+
 
 int main() {
     int i = 1;
@@ -80,7 +73,6 @@ int main() {
                 outFile << "Нет числа после знака " << i << endl;
                 return -1;
             }
-
             num1 = result;
         }
     } else {
@@ -99,7 +91,7 @@ bool flag = false;
 int countInt = A.countInt;
 int countReal = A.countReal;
 
-    for (int i = A.countInt - 1; i >= 0; i--) { // складываем Int
+    for (int i = A.countInt - 1; i >= 0; i--) {
         for (int j = 2; j >= 0; j--) {
             if (A.Integer[i][j] != '0' && A.Integer[i][j] != '\0' || i == 0 && j == 0){
                 flag = true;
@@ -118,7 +110,7 @@ int countReal = A.countReal;
     A.countInt = countInt;
     flag = false;
 
-    for (int i =  A.countReal - 1; i >= 0; i--) { // складываем Real    A >= B -> A - B
+    for (int i = A.countReal - 1; i >= 0; i--) { // складываем Real    A >= B -> A - B
         for (int j = 2; j >= 0; j--) {
             if (A.Real[i][j] != '0' && A.Real[i][j] != '\0' || i == 0 && j == 0){
                 flag = true;
@@ -163,11 +155,33 @@ void readTLong(ifstream &inFile, TLong &A, bool &correct){
     if (inFile.is_open()) {
         // буфер промежуточного хранения ['-'] + int + '.' + real + ' '
         char buff[length_buff];
-        inFile >> buff;
+        string helpBuff;
+        // inFile >> buff;
+        inFile >> helpBuff;
 
         // проверки кореектности
-        if (buff[0] == '-') { // проверки кореектности для отрицательного
+        if (helpBuff[0] == '-') { // проверки кореектности для отрицательного
+            // НЕНАВИЖУ НУЛИ
+            int countZero = 0;
 
+            while (helpBuff[countZero + 1] == '0') {
+                if (helpBuff[countZero + 2] == '.'){
+                    break;
+                }
+                countZero++;
+            }
+
+            helpBuff.erase(1, countZero - 1);
+
+            int k = 0;
+            while (helpBuff[k] != 0) {
+                buff[k] = helpBuff[k];
+                k++;
+            }
+            buff[k] = helpBuff[k];
+
+
+            // НЕНАВИЖУ НУЛИ
             for(int i = 0; i < length_buff; i++){ // проверка длины для отрицательного
                 if ((int)buff[i] == 0){
                     null_num = i;
@@ -205,6 +219,28 @@ void readTLong(ifstream &inFile, TLong &A, bool &correct){
             }
 
         } else { //проверки кореектности для положительного
+
+            // НЕНАВИЖУ НУЛИ
+            int countZero = 0;
+
+            while (helpBuff[countZero] == '0') {
+                if (helpBuff[countZero + 1] == '.'){
+                    break;
+                }
+                countZero++;
+            }
+
+            helpBuff.erase(0, countZero - 1);
+
+            int k = 0;
+            while (helpBuff[k] != 0) {
+                buff[k] = helpBuff[k];
+                k++;
+            }
+            buff[k] = helpBuff[k];
+
+
+            // НЕНАВИЖУ НУЛИ
 
             for(int i = 0; i < length_buff - 1; i++){ // проверка длины для положительного
                 if ((int)buff[i] == 0){
@@ -290,7 +326,9 @@ void readTLong(ifstream &inFile, TLong &A, bool &correct){
             cout << "некорректное число" << endl;
         }
     } else cout << "файл закрыт" << endl;
+
     A = num;
+
 }
 
 void writeTlong(ofstream &outFile, TLong num){
@@ -374,9 +412,48 @@ TLong subtractionTLong (TLong A, TLong B){ // A - B
     int remainder = 0;
 
         C.countInt = A.countInt;
+
+
+
         if (A.countReal >= B.countReal) {
+
+            for (int i = 2; i >= 0; i--) {
+                if (pos(A.Real[A.countReal-1][i]) == -1 || A.Real[A.countReal-1][i] == 0) {
+                    A.Real[A.countReal-1][i] = '0';
+                }
+            }
+
+            for (int i = 2; i >= 0; i--) {
+                if (pos(B.Real[B.countReal-1][i]) == -1 || pos(B.Real[B.countReal-1][i]) == 0) {
+                    B.Real[B.countReal-1][i] = '0';
+                }
+            }
+            for (int i = A.countReal - 1; i > B.countReal - 1; i--){
+                for (int j = 2; j >= 0 ; j--){
+                        B.Real[i][j] = '0';
+                }
+            }
+            B.countReal = A.countReal;
             C.countReal = A.countReal;
+
         } else {
+            for (int i = 2; i >= 0; i--) {
+                if (pos(B.Real[B.countReal-1][i]) == -1 || pos(B.Real[B.countReal-1][i]) == 0) {
+                    B.Real[B.countReal-1][i] = '0';
+                }
+            }
+            for (int i = 2; i >= 0; i--) {
+                if (pos(A.Real[A.countReal-1][i]) == -1 || A.Real[A.countReal-1][i] == 0) {
+                    A.Real[A.countReal-1][i] = '0';
+                }
+            }
+            for (int i = B.countReal - 1; i > A.countReal - 1; i--){
+                for (int j = 2; j >= 0 ; j--){
+                        A.Real[i][j] = '0';
+                }
+            }
+
+            A.countReal = B.countReal;
             C.countReal = B.countReal;
         }
 
@@ -405,7 +482,7 @@ TLong subtractionTLong (TLong A, TLong B){ // A - B
             }
         }
 
-        for (int i = 0; i < C.countInt; i++){ // складываем Int
+        for (int i = 0; i < C.countInt; i++){ // Int
             for (int j = 0; j <= 2; j++){
                 if (i + 1 > A.countInt || A.Integer[i][j] == '\0'){
                     if (pos(A.Integer[i][j]) != 0) {
@@ -428,6 +505,15 @@ TLong subtractionTLong (TLong A, TLong B){ // A - B
                 }
             }
         }
+
+//    if ( remainder != 0){
+//        if (C.countReal < num_R) C.countReal++;
+//        else if (C.countReal == num_R) cout << "ПЕРЕПОЛНЕНИЕ ЧИСЛА" << endl;
+//        C.Real[C.countReal - 1][0] = 0;
+//        C.Real[C.countReal - 1][1] = 0;
+//        C.Real[C.countReal - 1][2] = '1';
+//    }
+
     makeItNormal(C);
     return C;
 }
@@ -558,4 +644,4 @@ bool isEQTLong (TLong A, TLong B){
     return true;
 }
 
-
+// EFFF EDC6 6000 0000
